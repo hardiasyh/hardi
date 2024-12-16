@@ -1,0 +1,151 @@
+import random # Memilih secara acak satu elemen dari urutan daftar kata
+import tkinter as tk # Mengimpor modul tkinter yang digunakan untuk membuat antarmuka grapichal user interface (GUI) dalam Python
+
+# Daftar kata dan jawaban
+daftar_kata = { # Sebuah penyimpanan data yang berisi soal dan jawaban
+    "python": "Bahasa pemrograman yang sering digunakan untuk pengembangan perangkat lunak.",
+    "hangman": "Sebuah permainan menebak kata.",
+    "komputer": "Perangkat yang digunakan untuk memproses data.",
+    "permainan": "Suatu aktivitas yang dilakukan untuk hiburan.",
+    "pengembang": "Orang yang membuat perangkat lunak atau aplikasi."
+}
+
+# Fungsi memulai permainan
+def mulai_game(): # Mendefinisikan perintah yang akan dibuat
+    global kata, kata_tersembunyi, kesempatan, skor, tebakan_sebelumnya
+
+    # Memilih kata dan clue secara acak
+    kata, clue = random.choice(list(daftar_kata.items()))
+    kata_tersembunyi = ["_"] * len(kata)
+
+    # Menampilkan dua huruf pertama terbuka
+    if len(kata) > 1:
+        kata_tersembunyi[0] = kata[0]
+        kata_tersembunyi[3] = kata[3]
+    
+    kesempatan = 6  # Peluang tebakan
+    skor = 0  # Skor awal
+    tebakan_sebelumnya = []  # Menyimpan huruf yang sudah ditebak
+
+    # Menampilkan kata yang harus ditebak dan clue tambahan dalam label
+    label_kata.config(text=f"Kata yang harus ditebak: {''.join(kata_tersembunyi)}")
+    label_clue.config(text=f"Clue: {clue}")
+    
+    # Menampilkan tampilan permainan awal
+    tampilkan_tampilan()
+
+    # Menonaktifkan tombol mulai permainan setelah dimulai
+    tombol_mulai.config(state=tk.DISABLED)
+    tombol_tebakan.config(state=tk.NORMAL)  # Aktifkan tombol tebak huruf
+
+# Fungsi untuk menampilkan tampilan permainan
+def tampilkan_tampilan():
+    label_kesempatan.config(text=f"Tebakan yang tersisa: {kesempatan}")
+    label_skor.config(text=f"Skor: {skor}")
+
+# Fungsi untuk menangani tebakan huruf
+def tebak_huruf():
+    global kesempatan, skor, tebakan_sebelumnya
+
+    tebakan = entry_tebakan.get().lower()
+    entry_tebakan.delete(0, tk.END)
+
+    # Validasi input
+    if len(tebakan) != 1 or not tebakan.isalpha():
+        label_pesan.config(text="Tolong masukkan hanya satu huruf yang valid!")
+        return
+
+    # Mengecek apakah tebakan sudah pernah dimasukkan
+    if tebakan in tebakan_sebelumnya:
+        label_pesan.config(text=f"Anda sudah menebak huruf '{tebakan}' ini.")
+        return
+
+    # Menyimpan tebakan yang sudah dimasukkan
+    tebakan_sebelumnya.append(tebakan)
+
+    # Mengecek apakah tebakan benar
+    if tebakan in kata:
+        for i in range(len(kata)):
+            if kata[i] == tebakan:
+                kata_tersembunyi[i] = tebakan
+        skor += 10  # Tambah skor
+        label_pesan.config(text=f"Huruf '{tebakan}' ada dalam kata.")
+    else:
+        kesempatan -= 1  # Kurangi kesempatan
+        label_pesan.config(text=f"Huruf '{tebakan}' tidak ada dalam kata.")
+
+    tampilkan_tampilan()
+
+    # Memperbarui tampilan kata yang harus ditebak
+    label_kata.config(text=f"Kata yang harus ditebak: {''.join(kata_tersembunyi)}")
+
+    # Mengecek apakah pemain telah menebak kata dengan benar
+    if "_" not in kata_tersembunyi:
+        label_pesan.config(text=f"Selamat, Anda berhasil menebak kata: {kata}")
+        skor += 20  # Tambah skor jika menang
+        tampilkan_tampilan()
+        tombol_tebakan.config(state=tk.DISABLED)  # Menonaktifkan tombol setelah menang
+
+    # Jika kesempatan habis
+    if kesempatan == 0:
+        label_pesan.config(text=f"Sayang sekali, kesempatan Anda habis. Kata yang benar adalah: {kata}")
+        tampilkan_tampilan()
+        tombol_tebakan.config(state=tk.DISABLED)  # Menonaktifkan tombol setelah kalah
+
+    # Mengaktifkan tombol mulai permainan kembali setelah permainan selesai
+    if "_" not in kata_tersembunyi or kesempatan == 0:
+        tombol_mulai.config(state=tk.NORMAL)
+
+# Fungsi untuk mereset permainan
+def reset_game():
+    global kata, kata_tersembunyi, kesempatan, skor, tebakan_sebelumnya
+
+    # Mengaktifkan tombol "Mulai Permainan" dan menonaktifkan tombol tebak huruf
+    tombol_mulai.config(state=tk.NORMAL)
+    tombol_tebakan.config(state=tk.DISABLED)
+
+    # Mereset tampilan permainan
+    label_kata.config(text="")
+    label_clue.config(text="")
+    label_kesempatan.config(text="")
+    label_skor.config(text="")
+    label_pesan.config(text="")
+    entry_tebakan.delete(0, tk.END)
+
+# Membuat jendela utama
+window = tk.Tk()
+window.title("Permainan Hangman")
+
+# Label untuk kata yang harus ditebak dan clue
+label_kata = tk.Label(window, text="", font=("Helvetica", 16))
+label_kata.pack()
+
+# Label untuk clue deskripsi
+label_clue = tk.Label(window, text="", font=("Helvetica", 12))
+label_clue.pack()
+
+# Label untuk kesempatan dan skor
+label_kesempatan = tk.Label(window, text="", font=("Helvetica", 12))
+label_kesempatan.pack()
+
+label_skor = tk.Label(window, text="", font=("Helvetica", 12))
+label_skor.pack()
+
+# Label untuk menampilkan pesan (mengganti MessageBox)
+label_pesan = tk.Label(window, text="", font=("Helvetica", 12), fg="red")
+label_pesan.pack()
+
+# Entry untuk memasukkan tebakan
+entry_tebakan = tk.Entry(window, font=("Helvetica", 14))
+entry_tebakan.pack(pady=10)
+
+# Tombol untuk menebak huruf
+tombol_tebakan = tk.Button(window, text="Tebak Huruf", font=("Helvetica", 14), command=tebak_huruf)
+tombol_tebakan.pack()
+
+# Tombol untuk memulai permainan
+tombol_mulai = tk.Button(window, text="Mulai Permainan", font=("Helvetica", 14), command=mulai_game)
+tombol_mulai.pack(pady=20)
+
+# Menjalankan aplikasi
+window.mainloop()
